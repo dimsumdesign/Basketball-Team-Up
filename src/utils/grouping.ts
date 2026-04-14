@@ -1,18 +1,5 @@
 import { Player, Team, Position } from '../types';
 
-const TEAM_NAMES = [
-  "🔥 烈火战车 (Fire Chariots)",
-  "⚡️ 闪电风暴 (Lightning Storm)",
-  "🌪️ 狂风猛兽 (Tornado Beasts)",
-  "🌊 破浪狂鲨 (Wave Sharks)",
-  "🐉 飞龙在天 (Flying Dragons)",
-  "🦅 猎鹰突击 (Falcon Assault)",
-  "🐺 极地狼群 (Arctic Wolves)",
-  "🐻 狂暴巨熊 (Raging Bears)",
-  "🦈 深海巨齿 (Megalodons)",
-  "🦍 银背金刚 (Silverbacks)"
-];
-
 export function shuffle<T>(array: T[]): T[] {
   const newArray = [...array];
   for (let i = newArray.length - 1; i > 0; i--) {
@@ -26,13 +13,10 @@ export function generateTeams(players: Player[], teamSize: number): Team[] {
   const numTeams = Math.ceil(players.length / teamSize);
   const teams: Team[] = Array.from({ length: numTeams }, (_, i) => ({
     id: `team-${i}`,
-    name: '',
+    name: `${i + 1}队`,
     players: [],
     totalSkill: 0,
   }));
-
-  const shuffledNames = shuffle(TEAM_NAMES);
-  teams.forEach((t, i) => t.name = shuffledNames[i % shuffledNames.length]);
 
   // Sort by skill descending
   const sortedPlayers = [...players].sort((a, b) => b.skill - a.skill);
