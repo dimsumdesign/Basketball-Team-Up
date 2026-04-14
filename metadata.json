@@ -1,0 +1,5 @@
+{
+  "name": "Remix: HoopsDraft - 篮球公平分组",
+  "description": "一个用于篮球比赛的随机分组应用，支持输入球员姓名、位置和能力值，自动进行公平分组并分配场上位置。",
+  "requestFramePermissions": []
+}
