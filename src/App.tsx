@@ -2,9 +2,9 @@ import React, { useState, useRef } from 'react';
 import { Player, Position, Team } from './types';
 import { generateTeams } from './utils/grouping';
 import { DEFAULT_PLAYERS } from './utils/constants';
-import { Users, UserPlus, Trash2, Shuffle, Trophy, Settings, Star, Dribbble, Download } from 'lucide-react';
+import { Users, UserPlus, Trash2, Shuffle, Trophy, Settings, Star, Dribbble, Download, MapPin, Clock, Calendar } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import html2canvas from 'html2canvas';
+import { toPng } from 'html-to-image';
 
 function getPositionColor(pos: string) {
   switch(pos) {
@@ -21,6 +21,10 @@ export default function App() {
   const [players, setPlayers] = useState<Player[]>([]);
   const [teams, setTeams] = useState<Team[]>([]);
   const [teamSize, setTeamSize] = useState<number>(5);
+  
+  const [matchTheme, setMatchTheme] = useState('周末篮球局');
+  const [matchTime, setMatchTime] = useState('');
+  const [matchLocation, setMatchLocation] = useState('');
   
   const teamsRef = useRef<HTMLDivElement>(null);
   const [isDownloading, setIsDownloading] = useState(false);
@@ -64,13 +68,10 @@ export default function App() {
     if (!teamsRef.current) return;
     try {
       setIsDownloading(true);
-      const canvas = await html2canvas(teamsRef.current, {
+      const image = await toPng(teamsRef.current, {
         backgroundColor: '#09090b', // zinc-950 to match background
-        scale: 2,
-        useCORS: true,
-        logging: false
+        pixelRatio: 2,
       });
-      const image = canvas.toDataURL('image/png');
       
       // Show preview modal as fallback for iframe restrictions
       setPreviewImage(image);
@@ -110,6 +111,46 @@ export default function App() {
       <main className="max-w-7xl mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Left Column: Player Management */}
         <div className="lg:col-span-4 space-y-6">
+          {/* Match Info Form */}
+          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 shadow-xl">
+            <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+              <Calendar className="w-5 h-5 text-orange-500" />
+              比赛信息
+            </h2>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-medium text-zinc-400 mb-1">比赛主题</label>
+                <input 
+                  type="text" 
+                  value={matchTheme}
+                  onChange={(e) => setMatchTheme(e.target.value)}
+                  placeholder="例如：周末养生局"
+                  className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-colors"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-zinc-400 mb-1">比赛时间</label>
+                <input 
+                  type="text" 
+                  value={matchTime}
+                  onChange={(e) => setMatchTime(e.target.value)}
+                  placeholder="例如：周六下午 14:00"
+                  className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-colors"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-zinc-400 mb-1">比赛地点</label>
+                <input 
+                  type="text" 
+                  value={matchLocation}
+                  onChange={(e) => setMatchLocation(e.target.value)}
+                  placeholder="例如：XX体育馆"
+                  className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-colors"
+                />
+              </div>
+            </div>
+          </div>
+
           {/* Add Player Form */}
           <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 shadow-xl">
             <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
@@ -275,56 +316,91 @@ export default function App() {
                   {isDownloading ? '生成中...' : '保存为图片'}
                 </button>
               </div>
-              <div ref={teamsRef} className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-zinc-950 -m-4 rounded-xl">
-                {teams.map((team, idx) => (
-                <motion.div 
-                  key={team.id}
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: idx * 0.1 }}
-                  className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden shadow-xl"
-                >
-                  <div className="bg-zinc-950/50 p-4 border-b border-zinc-800 flex items-center justify-between">
-                    <h3 className="font-bold text-lg text-orange-400 flex items-center gap-2">
-                      <Trophy className="w-5 h-5" />
-                      {team.name}
-                    </h3>
-                    <div className="text-xs font-medium text-zinc-500 bg-zinc-900 px-2 py-1 rounded-full border border-zinc-800">
-                      总战力: {team.totalSkill}
+              <div className="overflow-hidden rounded-2xl border border-zinc-800">
+                <div ref={teamsRef} className="p-8 bg-zinc-950">
+                  {/* Header for Image */}
+                  <div className="mb-8 text-center space-y-4">
+                    <div className="flex items-center justify-center gap-3">
+                      <Dribbble className="w-10 h-10 text-orange-500" />
+                      <h2 className="text-3xl font-black tracking-tight text-zinc-100">{matchTheme || '篮球公平分组'}</h2>
                     </div>
+                    
+                    {(matchTime || matchLocation) && (
+                      <div className="flex flex-wrap items-center justify-center gap-6 text-zinc-400 text-sm">
+                        {matchTime && (
+                          <div className="flex items-center gap-2 bg-zinc-900 px-4 py-2 rounded-full border border-zinc-800">
+                            <Clock className="w-4 h-4 text-orange-500" />
+                            <span>{matchTime}</span>
+                          </div>
+                        )}
+                        {matchLocation && (
+                          <div className="flex items-center gap-2 bg-zinc-900 px-4 py-2 rounded-full border border-zinc-800">
+                            <MapPin className="w-4 h-4 text-orange-500" />
+                            <span>{matchLocation}</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
-                  <div className="p-2">
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="text-zinc-500 border-b border-zinc-800/50">
-                          <th className="text-left font-medium py-2 px-3">分配位置</th>
-                          <th className="text-left font-medium py-2 px-3">球员</th>
-                          <th className="text-right font-medium py-2 px-3">能力</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {team.players.map((player, pIdx) => (
-                          <tr key={pIdx} className="border-b border-zinc-800/30 last:border-0 hover:bg-zinc-800/20 transition-colors">
-                            <td className="py-2 px-3">
-                              <span className={`inline-flex items-center justify-center w-8 h-6 rounded text-xs font-bold ${getPositionColor(player.assignedPosition || player.position)}`}>
-                                {player.assignedPosition || player.position}
-                              </span>
-                            </td>
-                            <td className="py-2 px-3 font-medium">{player.name}</td>
-                            <td className="py-2 px-3 text-right">
-                              <div className="flex items-center justify-end">
-                                {Array.from({length: player.skill}).map((_, i) => (
-                                  <Star key={i} className="w-3 h-3 text-orange-500 fill-orange-500" />
-                                ))}
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {teams.map((team, idx) => (
+                      <motion.div 
+                        key={team.id}
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: idx * 0.1 }}
+                        className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden shadow-xl"
+                      >
+                        <div className="bg-zinc-950/50 p-4 border-b border-zinc-800 flex items-center justify-between">
+                          <h3 className="font-bold text-lg text-orange-400 flex items-center gap-2">
+                            <Trophy className="w-5 h-5" />
+                            {team.name}
+                          </h3>
+                          <div className="text-xs font-medium text-zinc-500 bg-zinc-900 px-2 py-1 rounded-full border border-zinc-800">
+                            总战力: {team.totalSkill}
+                          </div>
+                        </div>
+                        <div className="p-2">
+                          <table className="w-full text-sm">
+                            <thead>
+                              <tr className="text-zinc-500 border-b border-zinc-800/50">
+                                <th className="text-left font-medium py-2 px-3">分配位置</th>
+                                <th className="text-left font-medium py-2 px-3">球员</th>
+                                <th className="text-right font-medium py-2 px-3">能力</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {team.players.map((player, pIdx) => (
+                                <tr key={pIdx} className="border-b border-zinc-800/30 last:border-0 hover:bg-zinc-800/20 transition-colors">
+                                  <td className="py-2 px-3">
+                                    <span className={`inline-flex items-center justify-center w-8 h-6 rounded text-xs font-bold ${getPositionColor(player.assignedPosition || player.position)}`}>
+                                      {player.assignedPosition || player.position}
+                                    </span>
+                                  </td>
+                                  <td className="py-2 px-3 font-medium">{player.name}</td>
+                                  <td className="py-2 px-3 text-right">
+                                    <div className="flex items-center justify-end">
+                                      {Array.from({length: player.skill}).map((_, i) => (
+                                        <Star key={i} className="w-3 h-3 text-orange-500 fill-orange-500" />
+                                      ))}
+                                    </div>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </motion.div>
+                    ))}
                   </div>
-                </motion.div>
-              ))}
+                  
+                  {/* Footer for Image */}
+                  <div className="mt-8 text-center text-xs text-zinc-600 flex items-center justify-center gap-2">
+                    <Dribbble className="w-3 h-3" />
+                    <span>Generated by HoopsDraft</span>
+                  </div>
+                </div>
               </div>
             </div>
           ) : (
