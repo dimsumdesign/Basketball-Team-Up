@@ -13,7 +13,7 @@ export function generateTeams(players: Player[], teamSize: number): Team[] {
   const numTeams = Math.ceil(players.length / teamSize);
   const teams: Team[] = Array.from({ length: numTeams }, (_, i) => ({
     id: `team-${i}`,
-    name: `${i + 1}队`,
+    name: `${i + 1} 队`,
     players: [],
     totalSkill: 0,
   }));
